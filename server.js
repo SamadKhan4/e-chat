@@ -16,8 +16,15 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: '*',
-  credentials: true
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://e-chat-frontend.vercel.app',
+    'https://e-chat-production.up.railway.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
