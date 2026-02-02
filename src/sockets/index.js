@@ -107,7 +107,11 @@ const initializeSocket = (server) => {
         const populatedMessage = await message.populate('sender', 'name email');
         await Chat.findByIdAndUpdate(chatId, { latestMessage: message._id });
 
+        // Emit to all users in the chat room except sender
         socket.to(chatId).emit('receive_message', populatedMessage);
+        
+        // Also emit back to sender for confirmation
+        socket.emit('message_sent', populatedMessage);
       } catch (error) {
         console.error('Error saving message:', error);
       }
