@@ -30,8 +30,8 @@ const registerUser = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        domain: process.env.NODE_ENV === 'production' ? '.railway.app' : undefined
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        // Removed domain restriction to allow cookies to work properly
       });
       
       res.status(201).json({
@@ -62,8 +62,8 @@ const loginUser = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        domain: process.env.NODE_ENV === 'production' ? '.railway.app' : undefined
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+        // Removed domain restriction to allow cookies to work properly
       });
       
       res.json({

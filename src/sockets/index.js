@@ -22,44 +22,59 @@ const initializeSocket = (server) => {
   // Middleware to authenticate socket connections
   io.use(async (socket, next) => {
     try {
-      console.log('Socket handshake headers:', socket.handshake.headers);
-      console.log('Socket handshake auth:', socket.handshake.auth);
+      console.log('=== Socket Authentication Debug ===');
+      console.log('Socket ID:', socket.id);
+      console.log('Handshake headers keys:', Object.keys(socket.handshake.headers));
+      console.log('Handshake auth:', socket.handshake.auth);
+      console.log('Handshake query:', socket.handshake.query);
       
       // Check for token in handshake auth first
       let token = socket.handshake.auth.token;
+      console.log('Token from auth:', !!token);
       
       // If not in auth, try to get from query params (fallback)
       if (!token) {
         token = socket.handshake.query.token;
+        console.log('Token from query:', !!token);
       }
       
       // If not in query params, try to get from cookies
       if (!token) {
         const cookieHeader = socket.handshake.headers.cookie || '';
+        console.log('Cookie header:', cookieHeader);
         const match = cookieHeader.match(/(^| )token=([^;]+)/);
         if (match) {
           token = match[2];
+          console.log('Token extracted from cookie');
         }
       }
       
-      console.log('Token found:', !!token);
+      console.log('Final token present:', !!token);
       
       if (!token) {
+        console.log('No token found in any source');
         return next(new Error('Authentication error: No token provided'));
       }
       
+      // Log token length for debugging (don't log actual token for security)
+      console.log('Token length:', token.length);
+      
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Token decoded successfully, user ID:', decoded.id);
+      
       const user = await User.findById(decoded.id).select('-password');
       
       if (!user) {
+        console.log('User not found in database');
         return next(new Error('Authentication error: User not found'));
       }
       
       socket.user = user;
-      console.log('Socket authenticated for user:', user.email);
+      console.log('Socket authenticated successfully for user:', user.email);
       next();
     } catch (error) {
-      console.error('Socket authentication error:', error.message);
+      console.error('Socket authentication FAILED:', error.message);
+      console.error('Error stack:', error.stack);
       next(new Error('Authentication error: Invalid token'));
     }
   });
