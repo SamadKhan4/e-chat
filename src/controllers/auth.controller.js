@@ -25,11 +25,19 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
+      const token = generateToken(user._id);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        sameSite: 'strict'
+      });
+      
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id)
+        token: token
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -48,11 +56,19 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      const token = generateToken(user._id);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        sameSite: 'strict'
+      });
+      
       res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
-        token: generateToken(user._id)
+        token: token
       });
     } else {
       res.status(400).json({ message: 'Invalid email or password' });
