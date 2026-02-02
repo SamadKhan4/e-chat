@@ -12,24 +12,37 @@ const initializeSocket = (server) => {
         'https://e-chat-production.up.railway.app'
       ],
       methods: ['GET', 'POST'],
-      credentials: true
-    }
+      credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization']
+    },
+    transports: ['websocket', 'polling'],
+    allowEIO3: true
   });
 
   // Middleware to authenticate socket connections
   io.use(async (socket, next) => {
     try {
+      console.log('Socket handshake headers:', socket.handshake.headers);
+      console.log('Socket handshake auth:', socket.handshake.auth);
+      
       // Check for token in handshake auth first
       let token = socket.handshake.auth.token;
       
-      // If not in auth, try to get from cookies
+      // If not in auth, try to get from query params (fallback)
+      if (!token) {
+        token = socket.handshake.query.token;
+      }
+      
+      // If not in query params, try to get from cookies
       if (!token) {
         const cookieHeader = socket.handshake.headers.cookie || '';
         const match = cookieHeader.match(/(^| )token=([^;]+)/);
         if (match) {
-          token = match.pop();
+          token = match[2];
         }
       }
+      
+      console.log('Token found:', !!token);
       
       if (!token) {
         return next(new Error('Authentication error: No token provided'));
@@ -43,8 +56,10 @@ const initializeSocket = (server) => {
       }
       
       socket.user = user;
+      console.log('Socket authenticated for user:', user.email);
       next();
     } catch (error) {
+      console.error('Socket authentication error:', error.message);
       next(new Error('Authentication error: Invalid token'));
     }
   });

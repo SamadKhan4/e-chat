@@ -26,13 +26,23 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
+  exposedHeaders: ['Set-Cookie']
 }));
 app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./src/routes/auth.routes'));
 app.use('/api/chat', require('./src/routes/chat.routes'));
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
 
 // Basic route
 app.get('/', (req, res) => {
