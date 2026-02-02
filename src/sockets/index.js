@@ -5,8 +5,14 @@ const User = require('../models/User');
 const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: '*',
-      methods: ['GET', 'POST']
+      origin: [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'https://e-chat-frontend.vercel.app',
+        'https://e-chat-production.up.railway.app'
+      ],
+      methods: ['GET', 'POST'],
+      credentials: true
     }
   });
 
