@@ -5,17 +5,29 @@ const User = require('../models/User');
 // Create or access chat
 const createChat = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId, email } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ message: 'UserId param not sent with request' });
+    // Check if either userId or email is provided
+    if (!userId && !email) {
+      return res.status(400).json({ message: 'Either userId or email must be provided' });
     }
 
+    // If email is provided, find the user by email
+    let targetUserId = userId;
+    if (email) {
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        return res.status(404).json({ message: 'User with this email not found' });
+      }
+      targetUserId = user._id;
+    }
+
+    // Check if chat already exists
     let isChat = await Chat.find({
       isGroupChat: false,
       $and: [
         { users: { $elemMatch: { $eq: req.user._id } } },
-        { users: { $elemMatch: { $eq: userId } } }
+        { users: { $elemMatch: { $eq: targetUserId } } }
       ]
     }).populate('users', '-password').populate('latestMessage');
 
@@ -30,7 +42,7 @@ const createChat = async (req, res) => {
       const chatData = {
         chatName: 'sender',
         isGroupChat: false,
-        users: [req.user._id, userId]
+        users: [req.user._id, targetUserId]
       };
 
       const createdChat = await Chat.create(chatData);
